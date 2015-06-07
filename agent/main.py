@@ -6,22 +6,23 @@ import json
 import urllib2
 import socket
 import commands
+import pdb
 from moniItems import mon
 
 import sys, os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from simpleNet.nbNetFramework import sendData
+from simpleNet.nbNetFramework import sendData_mh
 
+trans_l = ['baidu.com:888', 'localhost:50000']
 
 class porterThread (threading.Thread):
-    def __init__(self, name, q, ql=None, interval=None, host=None, port=None):
+    def __init__(self, name, q, ql=None, interval=None):
         threading.Thread.__init__(self)
         self.name = name
         self.q = q
         #self.queueLock = ql
         self.interval = interval
-        self.host = host
-        self.port = port
+        self.sock_l = [None]
 
     def run(self):
         #print "Starting %s"  % self.name
@@ -44,19 +45,14 @@ class porterThread (threading.Thread):
             time.sleep(self.interval-((btime-atime)%self.interval))
             
     def get_data(self):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock_l = [s]
-            s.connect((self.host, self.port))
-        except:
-            pass
         while 1:
             print "get"
             #self.queueLock.acquire()
             if not self.q.empty():
                 data = self.q.get()
                 print data
-                sendData(sock_l, self.host, self.port, json.dumps(data))
+                #pdb.set_trace()
+                sendData_mh(self.sock_l, trans_l, json.dumps(data))
             #self.queueLock.release()
             time.sleep(self.interval)
 
@@ -66,7 +62,7 @@ def startTh():
     collect = porterThread('collect', q1, ql1, interval=3)
     collect.start()
     time.sleep(0.5)
-    sendjson = porterThread('sendjson', q1, ql1, interval=3, host="127.0.0.1", port=50001)
+    sendjson = porterThread('sendjson', q1, ql1, interval=3)
     sendjson.start()
     q2 = Queue.Queue(10)
     print  "start"
