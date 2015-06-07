@@ -21,14 +21,18 @@ db = mysql.connect(user="reboot", passwd="reboot123", \
 db.autocommit(True)
 c = db.cursor()
 
+def fnvhash(string):
+    ret = 97
+    for i in string:
+        ret = ret ^ ord(i) * 13
+    return ret
+
 def insertMonData(d_in):
     try:
         data = json.loads(d_in)
         print data
         dTime = int(data['Time'])
-        hostHash = hashlib.md5()
-        hostHash.update(data['Host'])
-        hostIndex = monTables[ord(hostHash.digest()[-1:]) % len(monTables)]
+        hostIndex = monTables[fnvhash(data['Host']) % len(monTables)]
         sql = "INSERT INTO `%s` (`host`,`mem_free`,`mem_usage`,`mem_total`,`load_avg`,`time`) VALUES('%s', '%d', '%d', '%d', '%s', '%d')" % \
             (hostIndex, data['Host'], data['MemFree'], data['MemUsage'], data['MemTotal'], data['LoadAvg'], dTime)
         ret = c.execute(sql)
