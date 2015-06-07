@@ -62,6 +62,7 @@ def sendData_mh(sock_l, host_l, data, single_host_retry = 3):
                 print "%010d%s"%(len(d), d)
                 count = sock_l[0].recv(10)
                 if not count:
+                    print 'count', count
                     raise Exception("recv error", "recv error")
                 count = int(count)
                 buf = sock_l[0].recv(count)
@@ -70,7 +71,8 @@ def sendData_mh(sock_l, host_l, data, single_host_retry = 3):
                     retry = 0
                     done = True
                     return True
-            except:
+            except (socket.error, ValueError), msg:
+                print msg.errno
                 sock_l[0].close()
                 sock_l[0] = None
                 retry += 1
@@ -224,10 +226,10 @@ class nbNet:
                 sock_state.state = "process"
                 self.process(fd)
         except (socket.error, ValueError), msg:
+            self.conn_state[fd].state = 'closing'
             if msg.errno == 11:
                 return
             # closing directly when error.
-            self.conn_state[fd].state = 'closing'
             dbgPrint(msg)
             self.state_machine(fd)
 
