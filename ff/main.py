@@ -43,7 +43,7 @@ if __name__ == '__main__':
 #        print d_in
         return("OK")
 
-    saverD = nbNet('0.0.0.0', 50002, logic)
-    saverD.run()
+    ffD = nbNet('0.0.0.0', 50002, logic)
+    ffD.run()
 
 

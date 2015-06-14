@@ -5,13 +5,22 @@ from daemon import Daemon
 import socket
 import select
 import time
+import pdb
 
 __all__ = ["nbNet", "sendData_mh"]
+#DEBUG = True
 DEBUG = False
+
+from inspect import currentframe
+
+def get_linenumber():
+    cf = currentframe()
+    return str(cf.f_back.f_back.f_lineno)
+
 
 def dbgPrint(msg):
     if DEBUG:
-        print(msg)
+        print get_linenumber(), msg
 
 import signal,functools
 class TimeoutError(Exception): pass
@@ -196,17 +205,17 @@ class nbNet:
 
     def read(self, fd):
         """fd is fileno() of socket"""
+        #pdb.set_trace()
         try:
             sock_state = self.conn_state[fd]
             conn = sock_state.sock_obj
             if sock_state.need_read <= 0:
-                self.conn_state[fd].state = 'closing'
-                self.state_machine(fd)
+                raise socket.error
 
             one_read = conn.recv(sock_state.need_read)
             dbgPrint("\tread func fd: %d, one_read: %s, need_read: %d" % (fd, one_read, sock_state.need_read))
             if len(one_read) == 0:
-                return
+                raise socket.error
             # process received data
             sock_state.buff_read += one_read
             sock_state.have_read += len(one_read)
@@ -229,9 +238,13 @@ class nbNet:
                 sock_state.state = "process"
                 self.process(fd)
         except (socket.error, ValueError), msg:
+            try:
+                if msg.errno == 11:
+                    dbgPrint("11 " + msg)
+                    return
+            except:
+                pass
             self.conn_state[fd].state = 'closing'
-            if msg.errno == 11:
-                return
             # closing directly when error.
             dbgPrint(msg)
             self.state_machine(fd)
@@ -256,7 +269,7 @@ class nbNet:
         except socket.error, msg:
             sock_state.state = "closing"
             dbgPrint(msg)
-        self.state_machine(fd)
+            self.state_machine(fd)
 
     def process(self, fd):
         sock_state = self.conn_state[fd]
