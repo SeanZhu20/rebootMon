@@ -9,188 +9,30 @@ import pdb
 
 __all__ = ["nbNet", "sendData_mh"]
 #DEBUG = True
-DEBUG = False
 
-from inspect import currentframe
+from nbNetUtils import *
 
-def get_linenumber():
-    cf = currentframe()
-    return str(cf.f_back.f_back.f_lineno)
-
-
-def dbgPrint(msg):
-    if DEBUG:
-        print get_linenumber(), msg
-
-import signal,functools
-class TimeoutError(Exception): pass
-def timeout(seconds, error_message = 'Function call timed out'):
-    def decorated(func):
-        def _handle_timeout(signum, frame):
-            raise TimeoutError(error_message)
-        def wrapper(*args, **kwargs):
-            signal.signal(signal.SIGALRM, _handle_timeout)
-            signal.alarm(seconds)
-            try:
-                result = func(*args, **kwargs)
-            finally:
-                signal.alarm(0)
-            return result
-        return functools.wraps(func)(wrapper)
-    return decorated
-
-@timeout(5)
-def connect_timeout(socket, host_port):
-    return socket.connect(host_port)
-
-def sendData_mh(sock_l, host_l, data, single_host_retry = 3):
-    """
-    saver_l = ["localhost:50001","127.0.0.1:50001"]
-    sock_l = [some_socket]
-    sendData_mh(sock_l,saver_l,"this is data to send")
-    """
-    done = False
-    for host_port in host_l:
-        if done:
-            break
-        host,port =host_port.split(':')
-        port = int(port)
-        print "iter", host, port
-        print "sock_l", sock_l
-        retry = 0
-        while retry < single_host_retry:
-            try:
-                if sock_l[0] == None:
-                    sock_l[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    print "connecting", host, port
-                    #connect_timeout(sock_l[0], (host, port))
-                    sock_l[0].settimeout(5)
-                    sock_l[0].connect((host, port))
-                d = data
-                sock_l[0].sendall("%010d%s"%(len(d), d))
-                print "%010d%s"%(len(d), d)
-                count = sock_l[0].recv(10)
-                if not count:
-                    print 'count', count
-                    raise Exception("recv error", "recv error")
-                count = int(count)
-                buf = sock_l[0].recv(count)
-                print buf
-                if buf[:2] == "OK":
-                    retry = 0
-                    done = True
-                    return True
-            except (Exception), msg:
-                try:
-                    print msg.errno
-                except:
-                    pass
-                sock_l[0].close()
-                sock_l[0] = None
-                retry += 1
-
-def sendData(sock_l, host, port, data):
-    retry = 0 
-    while retry < 3:
-        try:
-            if sock_l[0] == None:
-                sock_l[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock_l[0].connect((host, port))
-                print "connecting"
-            d = data
-            sock_l[0].sendall("%010d%s"%(len(d), d)) 
-            print "%010d%s"%(len(d), d)
-            count = sock_l[0].recv(10)
-            if not count:
-                raise Exception("recv error", "recv error")
-            count = int(count)
-            buf = sock_l[0].recv(count)
-            print buf 
-            if buf[:2] == "OK":
-                retry = 0 
-                break
-        except:
-            sock_l[0].close()
-            sock_l[0] = None
-            retry += 1
-
-
-
-# initial status for state machine
-class _STATE:
-    def __init__(self):
-        self.state = "accept"
-        self.have_read = 0
-        self.need_read = 10
-        self.have_write = 0
-        self.need_write = 0
-        self.buff_write = ""
-        self.buff_read = ""
-        # sock_obj is a object
-        self.sock_obj = ""
-
-    def printState(self):
-        if DEBUG:
-            dbgPrint('\n - current state of fd: %d' % self.sock_obj.fileno())
-            dbgPrint(" - - state: %s" % self.state)
-            dbgPrint(" - - have_read: %s" % self.have_read)
-            dbgPrint(" - - need_read: %s" % self.need_read)
-            dbgPrint(" - - have_write: %s" % self.have_write)
-            dbgPrint(" - - need_write: %s" % self.need_write)
-            dbgPrint(" - - buff_write: %s" % self.buff_write)
-            dbgPrint(" - - buff_read:  %s" % self.buff_read)
-            dbgPrint(" - - sock_obj:   %s" % self.sock_obj)
-
-
-class nbNet:
+class nbNetBase:
     '''non-blocking Net'''
-    def __init__(self, addr, port,logic):
-        dbgPrint('\n__init__: start!')
-        self.conn_state = {}
-        self.listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        self.listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.listen_sock.bind((addr, port))
-        self.listen_sock.listen(10)
-        self.setFd(self.listen_sock)
-        self.epoll_sock = select.epoll()
-        # LT for default, ET add ' | select.EPOLLET '
-        self.epoll_sock.register(self.listen_sock.fileno(), select.EPOLLIN )
-        self.logic = logic
-        self.sm = {
-            "accept" : self.accept,
-            "read"   : self.read,
-            "write"  : self.write,
-            "process": self.process,
-            "closing": self.close,
-        }
-        dbgPrint('\n__init__: end, register no: %s' % self.listen_sock.fileno() )
-
-
     def setFd(self, sock):
         """sock is class object of socket"""
         dbgPrint("\n -- setFd start!")
-        tmp_state = _STATE()
+        tmp_state = STATE()
         tmp_state.sock_obj = sock
         self.conn_state[sock.fileno()] = tmp_state
         self.conn_state[sock.fileno()].printState()
         dbgPrint("\n -- setFd end!")
 
-    def accept(self, fd):
+    def accept(self, fd): 
         """fd is fileno() of socket"""
         dbgPrint("\n -- accept start!")
         sock_state = self.conn_state[fd]
         sock = sock_state.sock_obj
         conn, addr = sock.accept()
         # set to non-blocking: 0
-        conn.setblocking(0)             
-        self.epoll_sock.register(conn.fileno(), select.EPOLLIN)
-        # new client connection fd be initilized 
-        self.setFd(conn)
-        self.conn_state[conn.fileno()].state = "read"
-        # now end of accept, but the main process still on 'accept' status
-        # waiting for new client to connect it.
-        dbgPrint("\n -- accept end!")
-
+        conn.setblocking(0)
+        return conn
+    
     def close(self, fd):
         """fd is fileno() of socket"""
         try:
@@ -202,7 +44,7 @@ class nbNet:
         except:
             dbgPrint("Close fd: %s abnormal" % fd)
             pass
-
+    
     def read(self, fd):
         """fd is fileno() of socket"""
         #pdb.set_trace()
@@ -233,22 +75,21 @@ class nbNet:
                 # after protocol header haven readed, read the real cmd content, 
                 # call machine instead of call read() it self in common.
                 sock_state.printState()
+                return "readcontent"
             elif sock_state.need_read == 0:
                 # recv complete, change state to process it
-                sock_state.state = "process"
-                self.process(fd)
+                return "process"
+            else:
+                return "readmore"
         except (socket.error, ValueError), msg:
             try:
                 if msg.errno == 11:
                     dbgPrint("11 " + msg)
-                    return
+                    return "retry"
             except:
                 pass
-            self.conn_state[fd].state = 'closing'
-            # closing directly when error.
-            dbgPrint(msg)
-            self.state_machine(fd)
-
+            return 'closing'
+        
 
     def write(self, fd):
         sock_state = self.conn_state[fd]
@@ -263,23 +104,13 @@ class nbNet:
                 # send complete, re init status, and listen re-read
                 sock_state.printState()
                 dbgPrint('\n write data completed!')
-                self.setFd(conn)
-                self.conn_state[fd].state = "read"
-                self.epoll_sock.modify(fd, select.EPOLLIN)
+                return "writecomplete"
+            else:
+                return "writemore"
         except socket.error, msg:
-            sock_state.state = "closing"
-            dbgPrint(msg)
-            self.state_machine(fd)
+            return "closing"
 
-    def process(self, fd):
-        sock_state = self.conn_state[fd]
-        response = self.logic(sock_state.buff_read)
-        sock_state.buff_write = "%010d%s" % (len(response), response)
-        sock_state.need_write = len(sock_state.buff_write)
-        sock_state.state = "write"
-        self.epoll_sock.modify(fd, select.EPOLLOUT)
-        sock_state.printState()
-        #self.state_machine(fd)
+
 
     def run(self):
         while True:
@@ -307,7 +138,94 @@ class nbNet:
         sock_state = self.conn_state[fd]
         self.sm[sock_state.state](fd)
 
+class nbNet(nbNetBase):
+    def __init__(self, addr, port, logic):
+        dbgPrint('\n__init__: start!')
+        self.conn_state = {}
+        self.listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.listen_sock.bind((addr, port))
+        self.listen_sock.listen(10)
+        self.setFd(self.listen_sock)
+        self.epoll_sock = select.epoll()
+        # LT for default, ET add ' | select.EPOLLET '
+        self.epoll_sock.register(self.listen_sock.fileno(), select.EPOLLIN )
+        self.logic = logic
+        self.sm = {
+            "accept" : self.accept2read,
+            "read"   : self.read2process,
+            "write"  : self.write2read,
+            "process": self.process,
+            "closing": self.close,
+        }
+        dbgPrint('\n__init__: end, register no: %s' % self.listen_sock.fileno() )
 
+    def process(self, fd):
+        sock_state = self.conn_state[fd]
+        response = self.logic(sock_state.buff_read)
+        sock_state.buff_write = "%010d%s" % (len(response), response)
+        sock_state.need_write = len(sock_state.buff_write)
+        sock_state.state = "write"
+        self.epoll_sock.modify(fd, select.EPOLLOUT)
+        sock_state.printState()
+        #self.state_machine(fd)
+    
+    def accept2read(self, fd):
+        conn = self.accept(fd)
+        self.epoll_sock.register(conn.fileno(), select.EPOLLIN)
+        # new client connection fd be initilized 
+        self.setFd(conn)
+        self.conn_state[conn.fileno()].state = "read"
+        # now end of accept, but the main process still on 'accept' status
+        # waiting for new client to connect it.
+        dbgPrint("\n -- accept end!")
+
+    def read2process(self, fd):
+        """fd is fileno() of socket"""
+        #pdb.set_trace()
+        read_ret = ""
+        try:
+            read_ret = self.read(fd)
+        except (Exception), msg:
+            dbgPrint(msg)
+            read_ret = "closing"
+        if read_ret == "process":
+            # recv complete, change state to process it
+            #sock_state.state = "process"
+            self.process(fd)
+        elif read_ret == "readcontent":
+            pass
+        elif read_ret == "readmore":
+            pass
+        elif read_ret == "retry":
+            pass
+        elif read_ret == "closing":
+            self.conn_state[fd].state = 'closing'
+            # closing directly when error.
+            self.state_machine(fd)
+        else:
+            raise Exception("impossible state returned by self.read")
+
+    def write2read(self, fd):
+        try:
+            write_ret = self.write(fd)
+        except socket.error, msg:
+            write_ret = "closing"
+
+        if write_ret == "writemore":
+            pass
+        elif write_ret == "writecomplete":
+            sock_state = self.conn_state[fd]
+            conn = sock_state.sock_obj
+            self.setFd(conn)
+            self.conn_state[fd].state = "read"
+            self.epoll_sock.modify(fd, select.EPOLLIN)
+        elif write_ret == "closing":
+            dbgPrint(msg)
+            self.conn_state[fd].state = 'closing'
+            # closing directly when error.
+            self.state_machine(fd)
+    
 
 if __name__ == '__main__':
     def logic(d_in):
