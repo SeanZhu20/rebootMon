@@ -71,8 +71,11 @@ def sendData_mh(sock_l, host_l, data, single_host_retry = 3):
                     retry = 0
                     done = True
                     return True
-            except (socket.error, ValueError), msg:
-                print msg.errno
+            except (Exception), msg:
+                try:
+                    print msg.errno
+                except:
+                    pass
                 sock_l[0].close()
                 sock_l[0] = None
                 retry += 1

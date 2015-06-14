@@ -1,4 +1,4 @@
 ff_conf = [
-    ['MemUsage', '>', 1900, 'alarm@qq.com'],
-    ['LoadAvg', '>', 1.0, 'pc@qq.com'],
+    ['MemUsage', '>', 1863, 3, 'alarm@qq.com'],
+    ['LoadAvg', '>', 0.2, 3, 'pc@qq.com'],
 ]

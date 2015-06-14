@@ -13,7 +13,7 @@ import sys, os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from simpleNet.nbNetFramework import sendData_mh
 
-trans_l = ['baidu.com:888', 'localhost:50000']
+trans_l = ['localhost:50000']
 
 class porterThread (threading.Thread):
     def __init__(self, name, q, ql=None, interval=None):
