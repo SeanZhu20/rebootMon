@@ -22,8 +22,8 @@ def sendFf(d_in, ff_l):
 
 if __name__ == '__main__':
     def logic(d_in):
-        ret = sendFf(d_in, ff_l)
-        #ret = sendSaver(d_in, saver_l)
+        #ret = sendFf(d_in, ff_l)
+        ret = sendSaver(d_in, saver_l)
         print ret
         if ret:
             return("OK")

@@ -45,7 +45,8 @@ class mon:
                 return a / 1024
     
     def getHost(self):
-        return socket.gethostname()
+        return ['host1', 'host2', 'host3', 'host4', 'host5'][int(time.time() * 1000.0) % 5] 
+        #return socket.gethostname()
     def getTime(self):
         return int(time.time())
     def runAllGet(self):

@@ -44,6 +44,17 @@ CREATE TABLE `stat_0` (
 
 """
 
+@app.route("/listhost", methods=["GET"])
+def listhost():
+    hostl = set()
+    for t in monTables:
+        sql = "SELECT distinct(`host`) FROM `%s`;" % (t)
+        c.execute(sql)
+        ones = c.fetchall()
+        for one in ones:
+            hostl.add(one[0])
+    return json.dumps(list(set(hostl)))
+
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
