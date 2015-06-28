@@ -115,6 +115,7 @@ def getdata():
     print sql 
     c.execute(sql)
     data = c.fetchall()
+    data = [[d[0], float(d[1])] for d in data]
     data = json.dumps(data)
     return_data = '%s(%s);' % (callback,data)
     return return_data 
