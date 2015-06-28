@@ -58,6 +58,18 @@ def listhost():
 @app.route("/", methods=["GET"])
 def index():
     hostname = request.args.get("host")
+    item = request.args.get("item")
+  #  mIteml = []
+    sql = "show columns from stat_2;"
+    print sql
+    c.execute(sql)
+    columns = c.fetchall()
+    columns = list(columns)
+    columns = [i[0] for i in columns]
+    columns.remove('id')
+    columns.remove('host')
+    columns.remove('time')
+    print columns 
     hostl = set()
     for t in monTables:
         sql = "SELECT distinct(`host`) FROM `%s`;" % (t)
@@ -65,21 +77,22 @@ def index():
         ones = c.fetchall()
         for one in ones:
             hostl.add(one[0])
-    return render_template("index.html", hosts = hostl, selected_host = hostname)
+    return render_template("index.html", hosts = hostl, selected_host = hostname,items = columns,selected_item = item)
 
 
 @app.route("/show", methods=["GET", "POST"])
 def show():
-    hostname = request.args.get("hostname")
-    mTable = monTables[fnvhash(hostname) % len(monTables)]
-    sql = "SELECT `load_avg` FROM `%s` WHERE host = '%s' limit 10;" % (mTable, hostname)
+    host = request.args.get("host")
+    item = request.args.get("item")
+    mTable = monTables[fnvhash(host) % len(monTables)]
+    sql = "SELECT `%s` FROM `%s` WHERE host = '%s';" % (item,mTable,host)
+    print sql
     c.execute(sql)
     ones = c.fetchall()
 
     return render_template("sysstatus.html", data=ones, sql = sql)
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=50004, debug=True)
+    app.run(host="0.0.0.0", port=500004, debug=True)
 
 

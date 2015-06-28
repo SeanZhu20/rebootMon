@@ -53,7 +53,7 @@
       </div>
     </nav>
 
-    <div class="container-fluid">
+    <div class="container-fluid" id="bigid">
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
@@ -74,12 +74,18 @@
           <h1 class="page-header">Dashboard</h1>
             <div class="dropdown">
               <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                {{ selected_mItem }}
+                {{ selected_item }}
                 <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                <li><a href="/?host={{ selected_host }}&item={{ mItem }}"></a></li>
+                {% for mItem in items %}
+                <!--<li><a href="/show?host={{ selected_host }}&item={{ mItem }}"></a>{{ mItem }}</li>-->
+                <li><a href="/?host={{ selected_host }}&item={{ mItem }}">{{ mItem }}</a></li>
+                {% endfor %}
               </ul>
+                <button id="checkid">
+                check
+                </button>
             </div>
           </div>
 
@@ -122,6 +128,16 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
     <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script>
+    //url = document.getElementById('').value()
+    url = 'show'+window.location.search
+    $('#checkid').on('click',function(){
+    $.get(url,function(result){
+        $('#bigid').html(result)      
+    })
+  })
+
+    </script>
   </body>
 </html>
 
