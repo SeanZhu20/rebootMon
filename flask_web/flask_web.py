@@ -44,6 +44,11 @@ CREATE TABLE `stat_0` (
 
 """
 
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
+
+
 @app.route("/show", methods=["GET", "POST"])
 def show():
     hostname = request.args.get("hostname")
