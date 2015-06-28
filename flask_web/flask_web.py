@@ -93,6 +93,6 @@ def show():
     return render_template("sysstatus.html", data=ones, sql = sql)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=500004, debug=True)
+    app.run(host="0.0.0.0", port=50004, debug=True)
 
 
