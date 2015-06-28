@@ -94,6 +94,31 @@ def getdata():
         [1147910400000,63.18]
     ]);
     """
+    host = request.args.get('host')
+    item = request.args.get('item')
+    t = int(time.time())
+    f = t - 3600
+    timetemplate = "%Y-%m-%d %H:%M:%S"
+    try:
+        t = time.mktime(datetime.datetime.strptime(request.args.get('to'), timetemplate).timetuple())
+        f = time.mktime(datetime.datetime.strptime(request.args.get('from'), timetemplate).timetuple())
+    except:
+        pass
+    print t, f 
+    start_time = f
+    end_time   = t
+    callback   = request.args.get('callback')
+
+    print start_time, end_time, callback
+    mTable = monTables[fnvhash(host) % len(monTables)]
+    sql = "SELECT `time`*1000,`%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,int(start_time),int(end_time))
+    print sql 
+    c.execute(sql)
+    data = c.fetchall()
+    data = json.dumps(data)
+    return_data = '%s(%s);' % (callback,data)
+    return return_data 
+
 
 @app.route("/show", methods=["GET", "POST"])
 def show():

@@ -69,7 +69,8 @@
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h1 class="page-header">REBOOT Monitor</h1>
-            <div class="dropdown">
+          <div class="row">
+            <div class="dropdown col-sm-2">
               <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                 {{ selected_item }}
                 <span class="caret"></span>
@@ -79,15 +80,20 @@
                 <li><a href="/?host={{ selected_host }}&item={{ item }}">{{ item }}</a></li>
                 {% endfor %}
               </ul>
-                <div class="demo">
-                    <span><input type="text" value="" id="from" onclick="SelectDate(this,'yyyy-MM-dd hh:mm:ss')"></span>
-                    <span><input type="text" value="" id="to" onclick="SelectDate(this,'yyyy-MM-dd hh:mm:ss')"></span>
-                </div>
-                <button id="checkid">
-                check
-                </button>
             </div>
+            <div class="input-group col-sm-offset-2 col-sm-10">
+              <span class="input-group-addon" id="sizing-addon1">开始时间:</span> 
+              <span><input type="text" placeholder="开始" class="form-control" value="" id="from" onclick="SelectDate(this,'yyyy-MM-dd hh:mm:ss')"></span>
+              <span class="input-group-addon" id="sizing-addon1">结束时间:</span> 
+              <span><input type="text" placeholder="结束" class="form-control" value="" id="to" onclick="SelectDate(this,'yyyy-MM-dd hh:mm:ss')"></span>
+            </div>
+            <h1 class="page-header"> </h1>
+            <div class="input-group-lg col-sm-offset-2 col-sm-10">
+              <button id="checkid" type="button" class="btn btn-default">check</button>
+            </div>
+          </div>
           <h2 class="sub-header">{{ selected_item  }}</h2>
+          <div id="container" style="min-width:700px;height:400px"></div> 
           <div class="table-responsive" id="mon_chart">
           </div>
         </div>
@@ -99,16 +105,39 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
     <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-1.8.3.min.js"></script> 
+    <script type="text/javascript" src="/static/highstock.js"></script> 
+    <script type="text/javascript" src="/static/js/exporting.js"></script> 
     <script>
     //url = document.getElementById('').value()
-    $('#checkid').on('click',function(){
+ 
+    $('#checkid').on('click',function () {
         from = '&from=' + $('#from').val();
         to = '&to=' + $('#to').val();
-        url = 'show'+ window.location.search + from + to
-        $.get(url,function(result){
-            $('#mon_chart').html(result)      
-        })
-      })
+        url = 'getdata'+ window.location.search + from + to + '&callback=?'
+
+        $.getJSON(url, function (data) {
+            // Create the chart
+            $('#container').highcharts('StockChart', {
+                rangeSelector : {
+                    selected : 1
+                },
+
+                title : {
+                    text : '{{ host }}--{{ item }}'
+                },
+
+                series : [{
+                    name : '{{ host }}',
+                    data : data,
+                    tooltip: {
+                        valueDecimals: 1
+                    }
+                }]
+            });
+        });
+    });
+
 
     </script>
   </body>
