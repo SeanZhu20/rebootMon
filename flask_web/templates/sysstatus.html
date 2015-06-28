@@ -9,7 +9,7 @@
 	
 $(function () {
 
-    $.getJSON('http://www.hcharts.cn/datas/jsonp.php?filename=aapl-c.json&callback=?', function (data) {
+    $.getJSON('getdata?callback=?&host={{ host }}&item={{ item }}&from={{ f }}&to={{ t }}', function (data) {
         // Create the chart
         $('#container').highcharts('StockChart', {
 

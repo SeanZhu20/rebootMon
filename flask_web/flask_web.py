@@ -83,7 +83,7 @@ def index():
 @app.route("/getdata", methods=["GET", "POST"])
 def getdata():
     """
-    /getdata?host=host5&item=mem_total&from=2015-06-26%2014:59:08&to=2015-06-28%2014:59:10&callback=jQuery18304293112317100167_1435477201089
+    /getdata?host=host5&item=mem_total&from=1434079888&to=1434079888&callback=jQuery18304293112317100167_1435477201089
     
     return:
     jQuery183045716429501771927_1435477247087(
@@ -109,13 +109,13 @@ def show():
         pass
     print t, f 
     
-    mTable = monTables[fnvhash(host) % len(monTables)]
-    sql = "SELECT `%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,f,t)
-    print sql
-    c.execute(sql)
-    ones = c.fetchall()
+    #mTable = monTables[fnvhash(host) % len(monTables)]
+    #sql = "SELECT `%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,f,t)
+    #print sql
+    #c.execute(sql)
+    #ones = c.fetchall()
 
-    return render_template("sysstatus.html", data=ones, sql = sql, item = item )
+    return render_template("sysstatus.html", host = host, item = item, f = int(f), t = int(t) )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=50004, debug=True)
