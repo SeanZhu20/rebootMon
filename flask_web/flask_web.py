@@ -2,6 +2,7 @@
 #encoding:utf8
 import json
 import time,random
+import datetime
 import MySQLdb as mysql
 from flask import Flask, request
 from flask import render_template
@@ -79,13 +80,37 @@ def index():
             hostl.add(one[0])
     return render_template("index.html", hosts = hostl, selected_host = hostname,items = columns,selected_item = item)
 
+@app.route("/getdata", methods=["GET", "POST"])
+def getdata():
+    """
+    /getdata?host=host5&item=mem_total&from=2015-06-26%2014:59:08&to=2015-06-28%2014:59:10&callback=jQuery18304293112317100167_1435477201089
+    
+    return:
+    jQuery183045716429501771927_1435477247087(
+    [
+        [1147651200000,67.79],
+        [1147737600000,64.98],
+        [1147824000000,65.26],
+        [1147910400000,63.18],
+    ]);
+    """
 
 @app.route("/show", methods=["GET", "POST"])
 def show():
     host = request.args.get("host")
     item = request.args.get("item")
+    t = int(time.time())
+    f = t - 3600
+    timetemplate = "%Y-%m-%d %H:%M:%S"
+    try:
+        t = time.mktime(datetime.datetime.strptime(request.args.get('to'), timetemplate).timetuple())
+        f = time.mktime(datetime.datetime.strptime(request.args.get('from'), timetemplate).timetuple())
+    except:
+        pass
+    print t, f 
+    
     mTable = monTables[fnvhash(host) % len(monTables)]
-    sql = "SELECT `%s` FROM `%s` WHERE host = '%s';" % (item,mTable,host)
+    sql = "SELECT `%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,f,t)
     print sql
     c.execute(sql)
     ones = c.fetchall()

@@ -16,6 +16,7 @@
 
     <!-- Custom styles for this template -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
+    <script src="/static/js/adddate.js"></script>
 
     <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
 
@@ -78,6 +79,10 @@
                 <li><a href="/?host={{ selected_host }}&item={{ item }}">{{ item }}</a></li>
                 {% endfor %}
               </ul>
+                <div class="demo">
+                    <span><input type="text" value="" id="from" onclick="SelectDate(this,'yyyy-MM-dd hh:mm:ss')"></span>
+                    <span><input type="text" value="" id="to" onclick="SelectDate(this,'yyyy-MM-dd hh:mm:ss')"></span>
+                </div>
                 <button id="checkid">
                 check
                 </button>
@@ -96,12 +101,14 @@
     <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script>
     //url = document.getElementById('').value()
-    url = 'show'+window.location.search
     $('#checkid').on('click',function(){
-    $.get(url,function(result){
-        $('#mon_chart').html(result)      
-    })
-  })
+        from = '&from=' + $('#from').val();
+        to = '&to=' + $('#to').val();
+        url = 'show'+ window.location.search + from + to
+        $.get(url,function(result){
+            $('#mon_chart').html(result)      
+        })
+      })
 
     </script>
   </body>
