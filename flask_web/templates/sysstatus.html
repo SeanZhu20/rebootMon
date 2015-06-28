@@ -19,14 +19,14 @@ $(function () {
             },
 
             title : {
-                text : 'AAPL Stock Price'
+                text : '{{ host }}--{{ item }}'
             },
 
             series : [{
-                name : 'AAPL',
+                name : '{{ host }}',
                 data : data,
                 tooltip: {
-                    valueDecimals: 2
+                    valueDecimals: 1
                 }
             }]
         });
