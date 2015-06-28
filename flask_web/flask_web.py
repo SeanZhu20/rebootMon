@@ -57,7 +57,15 @@ def listhost():
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    hostname = request.args.get("host")
+    hostl = set()
+    for t in monTables:
+        sql = "SELECT distinct(`host`) FROM `%s`;" % (t)
+        c.execute(sql)
+        ones = c.fetchall()
+        for one in ones:
+            hostl.add(one[0])
+    return render_template("index.html", hosts = hostl, selected_host = hostname)
 
 
 @app.route("/show", methods=["GET", "POST"])
