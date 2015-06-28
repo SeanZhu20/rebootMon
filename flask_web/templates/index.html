@@ -110,6 +110,11 @@
     <script type="text/javascript" src="/static/js/exporting.js"></script> 
     <script>
     //url = document.getElementById('').value()
+    Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
  
     $('#checkid').on('click',function () {
         from = '&from=' + $('#from').val();
