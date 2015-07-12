@@ -5,7 +5,15 @@
 # 步骤
 
 1. 接收部署命令：
-    > {"pkg_name":"package_name", "path":"deploy_path"}
+    > Client.deploy(self, pkg, path)
+
+1. 返回部署结果：
+    返回一个字典
+    * 成功：
+        > {"errno":0, "msg":"succ"}
+    * 失败：
+        > {"errno":非零错误码, "msg":"错误原因"}
+
 
 1. 下载部署包到一个临时目录 “/tmp/rebootDeploy/”，变成
 /tmp/rebootDeploy/package_name.tgz
