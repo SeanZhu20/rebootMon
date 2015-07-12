@@ -41,6 +41,9 @@ class HelloRPC(object):
         return encrypt(ret_str)
 
     def deploy(self, pkg, path):
+        """
+        http://reboot:8000/testDeploy/reboot_test_online_main.tgz
+        """
         print pkg, path
         return encrypt('OK')
 
