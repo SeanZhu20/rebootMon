@@ -1,3 +1,0 @@
-#!/bin/sh
-
-nohup ./reboot_test_online_main &>/dev/null &

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#coding=utf-8
 import zerorpc
 import time
 import os
@@ -8,14 +10,14 @@ from daemon import Daemon
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from collector.agent import startTh 
 
-TEST = False
+TEST = True
 
 class MyDaemon(Daemon):
     def run(self):
         e = gipc.start_process(target=Executor, args=('Executor',))
-        c = gipc.start_process(target=Collector, args=('Collector',))
+        #c = gipc.start_process(target=Collector, args=('Collector',))
         e.join()
-        c.join()
+        #c.join()
 
 def Collector(name):
     print 'hello', name
@@ -37,6 +39,10 @@ class HelloRPC(object):
         ret = os.popen(name).read()
         ret_str = "Result %s\n %s" % (time.strftime('%Y-%m-%d %H-%m-%S',time.localtime(time.time())), ret)
         return encrypt(ret_str)
+
+    def deploy(self, pkg, path):
+        print pkg, path
+        return encrypt('OK')
 
 if __name__ == "__main__":
         
