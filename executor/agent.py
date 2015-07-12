@@ -5,16 +5,28 @@ from crypt import *
 import gipc
 import sys, time
 from daemon import Daemon
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from collector.agent import startTh 
 
-TEST = True
+TEST = False
 
 class MyDaemon(Daemon):
     def run(self):
         e = gipc.start_process(target=Executor, args=('Executor',))
+        c = gipc.start_process(target=Collector, args=('Collector',))
         e.join()
+        c.join()
+
+def Collector(name):
+    print 'hello', name
+    startTh()
 
 def Executor(name):
     print 'hello', name
+#    if sys.platform == 'linux2':
+#        import ctypes
+#        libc = ctypes.cdll.LoadLibrary('libc.so.6')
+#        libc.prctl(15, 'My Simple App', 0, 0, 0)
     s = zerorpc.Server(HelloRPC())
     s.bind("tcp://0.0.0.0:4242")
     s.run()

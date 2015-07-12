@@ -8,8 +8,9 @@ def rpc_call(host):
     c = zerorpc.Client()
     c.connect("tcp://%s"%(host))
     get_str = c.hello('hostname')
+    #print get_str
     print decrypt(get_str) 
 
 if __name__ == "__main__":
     p = Pool(5)
-    p.map(rpc_call, ['127.0.0.1:4242', '127.0.0.1:4242'])
+    p.map(rpc_call, ['127.0.0.1:4242'])
