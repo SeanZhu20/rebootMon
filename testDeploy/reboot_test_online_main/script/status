@@ -2,4 +2,3 @@
 
 #reboot_test_online_main
 ps ux | grep -v grep | grep -v kill | grep reboot_test_online_main 2>&1 >/dev/null
-echo $?

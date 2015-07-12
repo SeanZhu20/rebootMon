@@ -45,8 +45,57 @@ class HelloRPC(object):
         """
         http://reboot:8000/testDeploy/reboot_test_online_main.tgz
         """
+        ret = {"errno":0, "msg":"succ"}
         print pkg, path
-        return encrypt('OK')
+        os.system("mkdir -p %s" % conf.tmp_path)
+        import urllib
+        print "%s/%s.tgz" % (conf.pkg_server, pkg)
+        urllib.urlretrieve("%s/%s.tgz" % (conf.pkg_server, pkg), conf.tmp_path + "/" + pkg + ".tgz")
+        unzip_ret = os.system("cd %s && tar xzf %s.tgz" % (conf.tmp_path, pkg))
+        if unzip_ret != 0:
+            ret['errno'] = unzip_ret
+            ret['msg'] = 'unzip error'
+            return ret
+        
+        md5_ret = os.system("cd %s/%s && md5sum -c md5.list" % (conf.tmp_path, pkg))
+        if md5_ret != 0:
+            ret['errno'] = md5_ret
+            ret['msg'] = 'md5 error'
+            return ret
+
+        os.system("cd %s/%s/bin && chmod +x *" % (conf.tmp_path, pkg))
+        os.system("cd %s/%s/script && chmod +x *" % (conf.tmp_path, pkg))
+        print "cd %s/%s/script && ./stop" % (conf.tmp_path, pkg)
+        stop_ret = os.system("cd %s/%s/script && ./stop" % (conf.tmp_path, pkg))
+       # if stop_ret != 0:
+       #     status_ret = os.system("cd %s/%s/script && ./status" % (path, pkg))
+       #     if status_ret == 0:
+       #         ret['errno'] = stop_ret
+       #         ret['msg'] = 'stop error'
+       #         return ret
+        
+        os.system("mkdir -p %s/%s" % (path, pkg))
+
+        print "cd %s/%s/ && cp -r * %s/%s" % (conf.tmp_path, pkg, path, pkg)
+        replace_ret = os.system("cd %s/%s/ && cp -r * %s/%s" % (conf.tmp_path, pkg, path, pkg))
+        if replace_ret != 0:
+            ret['errno'] = replace_ret
+            ret['msg'] = 'replace error'
+            return ret
+        
+        start_ret = os.system("cd %s/%s/script && ./start" % (path, pkg))
+        if start_ret != 0:
+            ret['errno'] = start_ret
+            ret['msg'] = 'start error'
+            return ret
+        
+        status_ret = os.system("cd %s/%s/script && ./status" % (path, pkg))
+        if status_ret != 0:
+            ret['errno'] = status_ret
+            ret['msg'] = 'status error'
+            return ret
+
+        return ret
 
 if __name__ == "__main__":
         

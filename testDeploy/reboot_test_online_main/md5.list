@@ -1,5 +1,4 @@
-d41d8cd98f00b204e9800998ecf8427e  ./md5.list
 d665d9f2881d4918008e4c2db08393b9  ./bin/reboot_test_online_main
 ea9c6cf47f7fee6c1ba795b87cbdb85f  ./script/start
-82f2e7ee13c2f18925158d1b3632421b  ./script/status
-0bb80972e6ad9a50e3705bd286dc7269  ./script/stop
+64eaeb59371f3d991f8cd6ae1318d0d9  ./script/status
+a970e8d95a2783e624099c1f9e325853  ./script/stop

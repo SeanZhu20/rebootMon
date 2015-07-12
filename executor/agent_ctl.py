@@ -16,9 +16,9 @@ host_l = ["%s:%d" % (h.strip(), conf.exec_port) for h in sys.argv[3].split(',')]
 def deploy_call(host):
     c = zerorpc.Client()
     c.connect("tcp://%s"%(host))
-    get_str = c.deploy(pkg, deploy_path)
+    ret = c.deploy(pkg, deploy_path)
     #print get_str
-    print decrypt(get_str) 
+    print ret
 
 def rpc_call(host):
     c = zerorpc.Client()
@@ -28,7 +28,8 @@ def rpc_call(host):
     print decrypt(get_str) 
 
 if __name__ == "__main__":
-    p = Pool(5)
-    print host_l
-    p.map(deploy_call, host_l)
+    deploy_call(host_l[0])
+    #p = Pool(5)
+    #print host_l
+    #p.map(deploy_call, host_l)
 

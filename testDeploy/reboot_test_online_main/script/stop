@@ -1,4 +1,4 @@
 #!/bin/sh
 
 #reboot_test_online_main
-ps ux | grep reboot_test_online_main | grep -v grep | grep -v kill | awk '{print $2}' | xargs kill 2>/dev/null 
+ps ux | grep reboot_test_online_main | grep -v agent_ctl| grep -v grep | grep -v kill | awk '{print $2}' | xargs kill 2>/dev/null 
