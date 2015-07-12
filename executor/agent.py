@@ -6,6 +6,7 @@ import os
 from crypt import *
 import gipc
 import sys, time
+import conf
 from daemon import Daemon
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from collector.agent import startTh 
@@ -30,7 +31,7 @@ def Executor(name):
 #        libc = ctypes.cdll.LoadLibrary('libc.so.6')
 #        libc.prctl(15, 'My Simple App', 0, 0, 0)
     s = zerorpc.Server(HelloRPC())
-    s.bind("tcp://0.0.0.0:4242")
+    s.bind("tcp://0.0.0.0:%d" % conf.exec_port)
     s.run()
 
 class HelloRPC(object):
