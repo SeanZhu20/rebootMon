@@ -20,9 +20,9 @@
     1. mv 线上代码部署为 xxx.bak
         假设线上路径为/home/work/package_name
     1. 一般要求有如下目录：
-        *. bin 程序存储目录
-        *. log 日志目录
-        *. script 存放各种运维脚本
+        1. bin 程序存储目录
+        1. log 日志目录
+        1. script 存放各种运维脚本
 
     > mv /home/work/package_name{,.bak}
 
