@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+#coding=utf-8
+import json
+import urllib
 import inspect
 import os,time,socket
 import urllib
@@ -67,36 +70,31 @@ class mon:
             {"eth1":10,"eth2":20,"eth3":32}
         
         """
-		# get the api
-		try:
-			result = urllib.urlopen("http://180.153.191.128:50004/userdefine_listitem").read()
-		except Exception :
-			return "get url fail"
-		res = json.loads(result)
-		url = res["url"]
-		name = res["name"]
-		md5 = res["md5"]
         data = {}
-		# check md5
-		# 脚本路径规范 /home/work/agent/mon/user/脚本名/脚本名.tgz"  
-		path = "/home/work/agent/mon/user/%s/" % (name)
-		check_md5 =  os.system("cd %s && md5sum %s.tgz|awk '{print $1}'" % (path,name))
-		if md5 != check_md5:
-			return "%s is change" % name
-		else:
-			#action
-			s = os.popen("cd %s && tar xvf %s.tgz >>/dev/null && chmod +x main && ./main"% (path,name)).read()
-		#return
-	    for i in s.split("\n"):
-			  k,v= i.split(":")
-			  data[k] = v
-		return data
-
-
-
-			
-		
-        return 
+        url = 'http://reboot:50004/userdefine_listitem'
+        try:
+            req = json.loads(urllib.urlopen(url).read())
+        except:
+            return data
+        data_url,md5,name = req['url'],req['md5'],req['name']
+        print data_url,md5, name
+        data_dir = '/home/work/agent/mon/user/'+name
+        os.system('mkdir -p %s' % data_dir)
+        print 'cd %s && md5sum xxx.tgz' % (data_dir)
+        if md5 in os.popen('cd %s && md5sum xxx.tgz' % (data_dir)).read():
+            pass
+        else:
+            urllib.urlretrieve(data_url, data_dir+'/'+'xxx.tgz')
+        os.system('cd %s && tar zxf xxx.tgz' % data_dir)
+        os.system('chmod +x %s/main' % data_dir)
+        ret = os.popen('%s/main' % data_dir).read()
+        for item in ret.split("\n"):
+            if not item:
+                continue
+            else:
+                key, val = item.split(":")
+                data["UD_"+key] = val
+        return data
 
     def runAllGet(self):
         for fun in inspect.getmembers(self, predicate=inspect.ismethod):

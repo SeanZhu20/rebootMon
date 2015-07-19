@@ -36,6 +36,14 @@ def insertMonData(d_in):
         sql = "INSERT INTO `%s` (`host`,`mem_free`,`mem_usage`,`mem_total`,`load_avg`,`time`) VALUES('%s', '%d', '%d', '%d', '%s', '%d')" % \
             (hostIndex, data['Host'], data['MemFree'], data['MemUsage'], data['MemTotal'], data['LoadAvg'], dTime)
         ret = c.execute(sql)
+        ## 把UD_开头的监控项数据json插入到user_define数据表中
+        ## master modify
+        print ret
+        #xxxxx
+        #lr 2222
+        ## 冲突
+        # 李冉做了一点修改
+        # 解决了哈哈哈
     except mysql.IntegrityError:
         pass
     
