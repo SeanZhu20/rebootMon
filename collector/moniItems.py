@@ -43,15 +43,35 @@ class mon:
                 mem_open.readline()
                 a = int(mem_open.readline().split()[1])
                 return a / 1024
-    
+     
     def getHost(self):
         return ['host1', 'host2', 'host3', 'host4', 'host5'][int(time.time() * 1000.0) % 5] 
         #return socket.gethostname()
     def getTime(self):
         return int(time.time())
+    
+    def userDefineMon(self):
+        """
+        5min -> GET webapi 获取自定义监控项列表
+            {"url":"脚本url","md5":"43214321","name":'eth_all'}
+        -> check md5
+            /home/work/agent/mon/user/$name/xxx.tgz
+        -> xxx.tgz -> main -> chmod +x -> ./main
+        -> output
+            eth1:10
+            eth2:20
+            eth3:32
+        -> return
+            {"eth1":10,"eth2":20,"eth3":32}
+        
+        """
+        return 
+
     def runAllGet(self):
         for fun in inspect.getmembers(self, predicate=inspect.ismethod):
-            if fun[0][:3] == 'get':
+            if fun[0] == "userDefineMon":
+                self.data.update(fun[1]())
+            elif fun[0][:3] == 'get':
                 self.data[fun[0][3:]] = fun[1]()
         return self.data
 
