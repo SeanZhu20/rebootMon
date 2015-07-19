@@ -45,6 +45,11 @@ CREATE TABLE `stat_0` (
 
 """
 
+@app.route("/userdefine_listitem", methods=["GET"])
+def listitem():
+    j = {"url":"http://reboot:50004/static/testUserDefine/xxx.tgz","md5":"c1811e3606e28da0ab076563fc630c00","name":'eth_all'}
+    return json.dumps(j)
+
 @app.route("/listhost", methods=["GET"])
 def listhost():
     hostl = set()

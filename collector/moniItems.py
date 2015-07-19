@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+#coding=utf-8
+import json
+import urllib
 import inspect
 import os,time,socket
 
@@ -65,7 +68,31 @@ class mon:
             {"eth1":10,"eth2":20,"eth3":32}
         
         """
-        return 
+        data = {}
+        url = 'http://reboot:50004/userdefine_listitem'
+        try:
+            req = json.loads(urllib.urlopen(url).read())
+        except:
+            return data
+        data_url,md5,name = req['url'],req['md5'],req['name']
+        print data_url,md5, name
+        data_dir = '/home/work/agent/mon/user/'+name
+        os.system('mkdir -p %s' % data_dir)
+        print 'cd %s && md5sum xxx.tgz' % (data_dir)
+        if md5 in os.popen('cd %s && md5sum xxx.tgz' % (data_dir)).read():
+            pass
+        else:
+            urllib.urlretrieve(data_url, data_dir+'/'+'xxx.tgz')
+        os.system('cd %s && tar zxf xxx.tgz' % data_dir)
+        os.system('chmod +x %s/main' % data_dir)
+        ret = os.popen('%s/main' % data_dir).read()
+        for item in ret.split("\n"):
+            if not item:
+                continue
+            else:
+                key, val = item.split(":")
+                data[key] = val
+        return data
 
     def runAllGet(self):
         for fun in inspect.getmembers(self, predicate=inspect.ismethod):
