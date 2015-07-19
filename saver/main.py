@@ -39,7 +39,7 @@ def insertMonData(d_in):
         str=""
         for i in data:
             if UD_ in i:
-               str += data[i]
+               str += "i:"+data[i]
         if str != "":
             sql = "INSERT INTO %s (user_define) VALUES('%s')" % (hostIndex,str)
             ret = c.execute(sql)
