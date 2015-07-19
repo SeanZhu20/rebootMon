@@ -39,6 +39,7 @@ def insertMonData(d_in):
         ## 把UD_开头的监控项数据json插入到user_define数据表中
         print ret
         #xxxxx
+        #lr 2222
         ## 冲突
         # 李冉做了一点修改
         # 解决了哈哈哈
