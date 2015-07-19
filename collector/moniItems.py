@@ -7,6 +7,9 @@ import os,time,socket
 import urllib
 import json
 
+userDefine_check_time = 0
+userDefine_json = []
+
 class mon:
     def __init__(self):
         self.data = {}
@@ -71,29 +74,37 @@ class mon:
         
         """
         data = {}
-        url = 'http://reboot:50004/userdefine_listitem'
-        try:
-            req = json.loads(urllib.urlopen(url).read())
-        except:
-            return data
-        data_url,md5,name = req['url'],req['md5'],req['name']
-        print data_url,md5, name
-        data_dir = '/home/work/agent/mon/user/'+name
-        os.system('mkdir -p %s' % data_dir)
-        print 'cd %s && md5sum xxx.tgz' % (data_dir)
-        if md5 in os.popen('cd %s && md5sum xxx.tgz' % (data_dir)).read():
-            pass
-        else:
-            urllib.urlretrieve(data_url, data_dir+'/'+'xxx.tgz')
-        os.system('cd %s && tar zxf xxx.tgz' % data_dir)
-        os.system('chmod +x %s/main' % data_dir)
-        ret = os.popen('%s/main' % data_dir).read()
-        for item in ret.split("\n"):
-            if not item:
-                continue
+        global userDefine_check_time
+        global userDefine_json
+        if time.time() - userDefine_check_time > 300 or userDefine_json == []:
+            url = 'http://reboot:50004/userdefine_listitem'
+            try:
+                userDefine_json = json.loads(urllib.urlopen(url).read())
+                userDefine_check_time = time.time()
+            except:
+                userDefine_json = []
+                return data
+        print userDefine_json 
+        for j in userDefine_json:
+            data_url,md5,name = j['url'],j['md5'],j['name']
+            print data_url,md5, name
+
+            data_dir = '/home/work/agent/mon/user/'+name
+            os.system('mkdir -p %s' % data_dir)
+            print 'cd %s && md5sum xxx.tgz' % (data_dir)
+            if md5 in os.popen('cd %s && md5sum xxx.tgz' % (data_dir)).read():
+                pass
             else:
-                key, val = item.split(":")
-                data["UD_"+key] = val
+                urllib.urlretrieve(data_url, data_dir+'/'+'xxx.tgz')
+            os.system('cd %s && tar zxf xxx.tgz' % data_dir)
+            os.system('chmod +x %s/main' % data_dir)
+            ret = os.popen('%s/main' % data_dir).read()
+            for item in ret.split("\n"):
+                if not item:
+                    continue
+                else:
+                    key, val = item.split(":")
+                    data["UD_"+key] = val
         return data
 
     def runAllGet(self):
