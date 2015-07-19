@@ -37,6 +37,7 @@ def insertMonData(d_in):
             (hostIndex, data['Host'], data['MemFree'], data['MemUsage'], data['MemTotal'], data['LoadAvg'], dTime)
         ret = c.execute(sql)
         ## 把UD_开头的监控项数据json插入到user_define数据表中
+        ## 冲突
     except mysql.IntegrityError:
         pass
     
