@@ -122,11 +122,17 @@ def getdata():
 
     print start_time, end_time, callback
     mTable = monTables[fnvhash(host) % len(monTables)]
-    sql = "SELECT `time`*1000,`%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,int(start_time),int(end_time))
+    if item[:3] == "UD_":
+        sql = "SELECT `time`*1000,`user_define` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (mTable,host,int(start_time),int(end_time))
+    else:
+        sql = "SELECT `time`*1000,`%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,int(start_time),int(end_time))
     print sql 
     c.execute(sql)
     data = c.fetchall()
-    data = [[d[0], float(d[1])] for d in data]
+    if item[:3] == "UD_":
+        data = [[d[0], float(json.loads(d[1])[item])] for d in data]
+    else:
+        data = [[d[0], float(d[1])] for d in data]
     data = json.dumps(data)
     return_data = '%s(%s);' % (callback,data)
     return return_data 
