@@ -40,6 +40,7 @@ def insertMonData(d_in):
         print ret
         #xxxxx
         ## 冲突
+        # 李冉做了一点修改
         # 解决了哈哈哈
     except mysql.IntegrityError:
         pass
