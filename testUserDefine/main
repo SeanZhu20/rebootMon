@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "eth1:10"
+echo "eth2:432321"
+echo "eth11:4324"
