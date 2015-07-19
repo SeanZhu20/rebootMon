@@ -59,7 +59,7 @@ class HelloRPC(object):
         
         md5_ret = os.system("cd %s/%s && md5sum -c md5.list" % (conf.tmp_path, pkg))
         if md5_ret != 0:
-            ret['errno'] = md5_ret
+            raet['errno'] = md5_ret
             ret['msg'] = 'md5 error'
             return ret
 

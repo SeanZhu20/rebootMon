@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import inspect
 import os,time,socket
+import urllib
+import json
 
 class mon:
     def __init__(self):
@@ -65,6 +67,35 @@ class mon:
             {"eth1":10,"eth2":20,"eth3":32}
         
         """
+		# get the api
+		try:
+			result = urllib.urlopen("http://180.153.191.128:50004/userdefine_listitem").read()
+		except Exception :
+			return "get url fail"
+		res = json.loads(result)
+		url = res["url"]
+		name = res["name"]
+		md5 = res["md5"]
+        data = {}
+		# check md5
+		# 脚本路径规范 /home/work/agent/mon/user/脚本名/脚本名.tgz"  
+		path = "/home/work/agent/mon/user/%s/" % (name)
+		check_md5 =  os.system("cd %s && md5sum %s.tgz|awk '{print $1}'" % (path,name))
+		if md5 != check_md5:
+			return "%s is change" % name
+		else:
+			#action
+			s = os.popen("cd %s && tar xvf %s.tgz >>/dev/null && chmod +x main && ./main"% (path,name)).read()
+		#return
+	    for i in s.split("\n"):
+			  k,v= i.split(":")
+			  data[k] = v
+		return data
+
+
+
+			
+		
         return 
 
     def runAllGet(self):
