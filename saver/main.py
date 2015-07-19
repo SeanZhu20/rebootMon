@@ -29,19 +29,19 @@ def fnvhash(string):
 
 def insertMonData(d_in):
     try:
+        j = {}
         data = json.loads(d_in)
         print data
         dTime = int(data['Time'])
         hostIndex = monTables[fnvhash(data['Host']) % len(monTables)]
-        sql = "INSERT INTO `%s` (`host`,`mem_free`,`mem_usage`,`mem_total`,`load_avg`,`time`) VALUES('%s', '%d', '%d', '%d', '%s', '%d')" % \
-            (hostIndex, data['Host'], data['MemFree'], data['MemUsage'], data['MemTotal'], data['LoadAvg'], dTime)
+        for ud in data:
+            if ud.startswith('UD_'):
+                j[ud] = data[ud]
+        ud_data = json.dumps(j)
+        sql = "INSERT INTO `%s` (`host`,`mem_free`,`mem_usage`,`mem_total`,`load_avg`,`time`,`user_define`) VALUES('%s', '%d', '%d', '%d', '%s', '%d','%s')" % \
+            (hostIndex, data['Host'], data['MemFree'], data['MemUsage'], data['MemTotal'], data['LoadAvg'], dTime,ud_data)
         ret = c.execute(sql)
         ## 把UD_开头的监控项数据json插入到user_define数据表中
-        ## master modify
-        print ret
-        #xxxxx
-        ## 冲突
-        # 解决了哈哈哈
     except mysql.IntegrityError:
         pass
     
