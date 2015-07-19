@@ -39,6 +39,7 @@ CREATE TABLE `stat_0` (
   `mem_total` int(11) DEFAULT NULL,
   `load_avg` varchar(128) DEFAULT NULL,
   `time` bigint(11) DEFAULT NULL,
+  `user_define` varchar(4096) DEFAULT "",
   PRIMARY KEY (`id`),
   KEY `host` (`host`(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
@@ -75,6 +76,11 @@ def index():
     columns.remove('id')
     columns.remove('host')
     columns.remove('time')
+    columns.remove('user_define')
+    c.execute("SELECT `user_define` FROM falcon.stat_2 order by `time` desc limit 1")
+    columns.extend(json.loads(c.fetchall()[0][0]).keys())
+    
+
     print columns 
     hostl = set()
     for t in monTables:
@@ -88,8 +94,8 @@ def index():
 @app.route("/getdata", methods=["GET", "POST"])
 def getdata():
     """
-    /getdata?host=host5&item=mem_total&from=1434079888&to=1434079888&callback=jQuery18304293112317100167_1435477201089
-    
+    http://reboot:50004/getdata?host=host1&item=UD_eth11&from=2015-07-19%2015:47:32&to=&callback=jQuery18303697302439250052_1437291543987&_=1437292056435
+
     return:
     jQuery183045716429501771927_1435477247087(
     [
