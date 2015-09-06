@@ -8,6 +8,7 @@ import hashlib
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from simpleNet.nbNetFramework import nbNet
+from dbutil.dbutil import DB
 
 monTables = [
     'stat_0',
@@ -16,10 +17,8 @@ monTables = [
     'stat_3',
 ]
 
-db = mysql.connect(user="reboot", passwd="reboot123", \
-        db="falcon", charset="utf8")
-db.autocommit(True)
-c = db.cursor()
+db = DB(host="localhost", mysql_user="reboot", mysql_pass="reboot123", \
+                mysql_db="falcon")
 
 def fnvhash(string):
     ret = 97
@@ -40,7 +39,7 @@ def insertMonData(d_in):
         ud_data = json.dumps(j)
         sql = "INSERT INTO `%s` (`host`,`mem_free`,`mem_usage`,`mem_total`,`load_avg`,`time`,`user_define`) VALUES('%s', '%d', '%d', '%d', '%s', '%d','%s')" % \
             (hostIndex, data['Host'], data['MemFree'], data['MemUsage'], data['MemTotal'], data['LoadAvg'], dTime,ud_data)
-        ret = c.execute(sql)
+        c = db.execute(sql)
         ## 把UD_开头的监控项数据json插入到user_define数据表中
     except mysql.IntegrityError:
         pass
