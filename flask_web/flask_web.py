@@ -3,7 +3,7 @@
 import json
 import time,random
 import datetime
-import MySQLdb as mysql
+import MySQLdb
 from flask import Flask, request
 from flask import render_template
 import sys, os
@@ -11,11 +11,49 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 #from controller.client import *
 #from nbNet.nbNet import sendData
 
+class DB: 
+    conn = None
+    db = None
+    host = None
+
+    def __init__(self, host, mysql_user, mysql_pass, mysql_db):
+        self.host = host
+        self.mysql_user = mysql_user
+        self.mysql_pass = mysql_pass
+        self.mysql_db = mysql_db
+    def connect(self):
+        self.conn = MySQLdb.connect(host=self.host, user=self.mysql_user, passwd=self.mysql_pass, db=self.mysql_db, charset="utf8", connect_timeout=600, compress=True)
+        self.conn.autocommit(True)
+    def execute(self, sql):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+        except (AttributeError, MySQLdb.OperationalError):
+            try:
+                cursor.close()
+                self.conn.close()
+            except:
+                pass
+            time.sleep(1)
+            try:
+                self.connect()
+                print "reconnect DB"
+                cursor = self.conn.cursor()
+                cursor.execute(sql)
+            except (AttributeError, MySQLdb.OperationalError):
+                time.sleep(2)
+                self.connect()
+                print "reconnect DB"
+                cursor = self.conn.cursor()
+                cursor.execute(sql)
+    
+        return cursor
+
+
+db = DB(host="localhost", mysql_user="reboot", mysql_pass="reboot123", \
+                mysql_db="falcon")
+
 app = Flask(__name__)
-db = mysql.connect(user="reboot", passwd="reboot123", \
-        db="falcon", charset="utf8")
-db.autocommit(True)
-c = db.cursor()
 
 monTables = [
     'stat_0',
@@ -56,7 +94,7 @@ def listhost():
     hostl = set()
     for t in monTables:
         sql = "SELECT distinct(`host`) FROM `%s`;" % (t)
-        c.execute(sql)
+        c = db.execute(sql)
         ones = c.fetchall()
         for one in ones:
             hostl.add(one[0])
@@ -69,7 +107,7 @@ def index():
   #  mIteml = []
     sql = "show columns from stat_2;"
     print sql
-    c.execute(sql)
+    c = db.execute(sql)
     columns = c.fetchall()
     columns = list(columns)
     columns = [i[0] for i in columns]
@@ -77,15 +115,17 @@ def index():
     columns.remove('host')
     columns.remove('time')
     columns.remove('user_define')
-    c.execute("SELECT `user_define` FROM falcon.stat_2 order by `time` desc limit 1")
-    columns.extend(json.loads(c.fetchall()[0][0]).keys())
-    
+    try:
+        c = db.execute("SELECT `user_define` FROM falcon.stat_2 order by `time` desc limit 1")
+        columns.extend(json.loads(c.fetchall()[0][0]).keys())
+    except:
+        pass
 
     print columns 
     hostl = set()
     for t in monTables:
         sql = "SELECT distinct(`host`) FROM `%s`;" % (t)
-        c.execute(sql)
+        c = db.execute(sql)
         ones = c.fetchall()
         for one in ones:
             hostl.add(one[0])
@@ -127,7 +167,7 @@ def getdata():
     else:
         sql = "SELECT `time`*1000,`%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,int(start_time),int(end_time))
     print sql 
-    c.execute(sql)
+    c = db.execute(sql)
     data = c.fetchall()
     if item[:3] == "UD_":
         data = [[d[0], float(json.loads(d[1])[item])] for d in data]
@@ -155,7 +195,7 @@ def show():
     #mTable = monTables[fnvhash(host) % len(monTables)]
     #sql = "SELECT `%s` FROM `%s` WHERE host = '%s' AND `time` BETWEEN '%d' AND '%d';" % (item,mTable,host,f,t)
     #print sql
-    #c.execute(sql)
+    #c = db.execute(sql)
     #ones = c.fetchall()
 
     return render_template("sysstatus.html", host = host, item = item, f = int(f), t = int(t) )
