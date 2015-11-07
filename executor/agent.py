@@ -8,7 +8,7 @@ import gipc
 import sys, time
 import conf
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from simpleNet.daemon import Daemon
+from nbNet.daemon import Daemon
 from collector.agent import startTh 
 
 TEST = True

@@ -9,7 +9,7 @@ import hashlib
 import conf
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from simpleNet.nbNetFramework import nbNet
+from nbNet.nbNetFramework import nbNet
 
 alarmStatus = {}
 
