@@ -7,8 +7,8 @@ from crypt import *
 import gipc
 import sys, time
 import conf
-from daemon import Daemon
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from simpleNet.daemon import Daemon
 from collector.agent import startTh 
 
 TEST = True
