@@ -59,7 +59,7 @@ class porterThread (threading.Thread):
 def startTh():
     q1 = Queue.Queue(10)
     ql1 = threading.Lock()
-    collect = porterThread('collect', q1, ql1, interval=3)
+    collect = porterThread('collect', q1, ql1, interval=30)
     collect.start()
     time.sleep(0.5)
     sendjson = porterThread('sendjson', q1, ql1, interval=3)
