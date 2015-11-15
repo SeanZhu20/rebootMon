@@ -1,4 +1,4 @@
-# simpleNet
+# nbNet
 reboot-arch第四期课上
 简洁而不简单的监控系统
 

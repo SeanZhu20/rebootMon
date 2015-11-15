@@ -6,7 +6,7 @@ import json
 import hashlib
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from simpleNet.nbNetFramework import nbNet, sendData_mh
+from nbNet.nbNetFramework import nbNet, sendData_mh
 
 saver_l = ["localhost:50001", "127.0.0.1:50001"]
 ff_l = ["localhost:50002", "127.0.0.1:50002"]

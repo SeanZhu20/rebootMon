@@ -11,7 +11,7 @@ from moniItems import mon
 
 import sys, os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from simpleNet.nbNetFramework import sendData_mh
+from nbNet.nbNetFramework import sendData_mh
 
 trans_l = ['localhost:50000']
 
