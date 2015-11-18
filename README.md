@@ -8,7 +8,7 @@ http://51reboot.com/python-opsdev-framework/
 
 ## 架构图
 
-![alt tag](https://github.com/51reboot/simpleMon/blob/master/docs/arch.jpg)
+![alt tag](https://github.com/51reboot/rebootMon-4/blob/master/arch.jpg)
 
 ## TODO
 
