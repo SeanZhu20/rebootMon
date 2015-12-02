@@ -16,16 +16,16 @@ class nbNetBase:
     '''non-blocking Net'''
     def setFd(self, sock):
         """sock is class object of socket"""
-        dbgPrint("\n -- setFd start!")
+        #dbgPrint("\n -- setFd start!")
         tmp_state = STATE()
         tmp_state.sock_obj = sock
         self.conn_state[sock.fileno()] = tmp_state
         self.conn_state[sock.fileno()].printState()
-        dbgPrint("\n -- setFd end!")
+        #dbgPrint("\n -- setFd end!")
 
     def accept(self, fd): 
         """fd is fileno() of socket"""
-        dbgPrint("\n -- accept start!")
+        #dbgPrint("\n -- accept start!")
         sock_state = self.conn_state[fd]
         sock = sock_state.sock_obj
         conn, addr = sock.accept()
@@ -42,7 +42,7 @@ class nbNetBase:
             self.epoll_sock.unregister(fd)
             self.conn_state.pop(fd)
         except:
-            dbgPrint("Close fd: %s abnormal" % fd)
+            #dbgPrint("Close fd: %s abnormal" % fd)
             pass
     
     def read(self, fd):
@@ -55,7 +55,7 @@ class nbNetBase:
                 raise socket.error
 
             one_read = conn.recv(sock_state.need_read)
-            dbgPrint("\tread func fd: %d, one_read: %s, need_read: %d" % (fd, one_read, sock_state.need_read))
+            #dbgPrint("\tread func fd: %d, one_read: %s, need_read: %d" % (fd, one_read, sock_state.need_read))
             if len(one_read) == 0:
                 raise socket.error
             # process received data
@@ -84,13 +84,14 @@ class nbNetBase:
         except (socket.error, ValueError), msg:
             try:
                 if msg.errno == 11:
-                    dbgPrint("11 " + msg)
+                    #dbgPrint("11 " + msg)
                     return "retry"
             except:
                 pass
             return 'closing'
         
 
+    #@profile
     def write(self, fd):
         sock_state = self.conn_state[fd]
         conn = sock_state.sock_obj
@@ -103,7 +104,7 @@ class nbNetBase:
             if sock_state.need_write == 0 and sock_state.have_write != 0:
                 # send complete, re init status, and listen re-read
                 sock_state.printState()
-                dbgPrint('\n write data completed!')
+                #dbgPrint('\n write data completed!')
                 return "writecomplete"
             else:
                 return "writemore"
@@ -111,36 +112,35 @@ class nbNetBase:
             return "closing"
 
 
-
     def run(self):
         while True:
-            dbgPrint("\nrun func loop:")
+            #dbgPrint("\nrun func loop:")
             # print conn_state
             for i in self.conn_state.iterkeys():
-                dbgPrint("\n - state of fd: %d" % i)
+                #dbgPrint("\n - state of fd: %d" % i)
                 self.conn_state[i].printState()
 
             epoll_list = self.epoll_sock.poll()
             for fd, events in epoll_list:
-                dbgPrint('\n-- run epoll return fd: %d. event: %s' % (fd, events))
+                #dbgPrint('\n-- run epoll return fd: %d. event: %s' % (fd, events))
                 sock_state = self.conn_state[fd]
                 if select.EPOLLHUP & events:
-                    dbgPrint("EPOLLHUP")
+                    #dbgPrint("EPOLLHUP")
                     sock_state.state = "closing"
                 elif select.EPOLLERR & events:
-                    dbgPrint("EPOLLERR")
+                    #dbgPrint("EPOLLERR")
                     sock_state.state = "closing"
                 self.state_machine(fd)
 
     def state_machine(self, fd):
         #time.sleep(0.1)
-        dbgPrint("\n - state machine: fd: %d, status: %s" % (fd, self.conn_state[fd].state))
+        #dbgPrint("\n - state machine: fd: %d, status: %s" % (fd, self.conn_state[fd].state))
         sock_state = self.conn_state[fd]
         self.sm[sock_state.state](fd)
 
 class nbNet(nbNetBase):
     def __init__(self, addr, port, logic):
-        dbgPrint('\n__init__: start!')
+        #dbgPrint('\n__init__: start!')
         self.conn_state = {}
         self.listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         self.listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -158,8 +158,9 @@ class nbNet(nbNetBase):
             "process": self.process,
             "closing": self.close,
         }
-        dbgPrint('\n__init__: end, register no: %s' % self.listen_sock.fileno() )
+        #dbgPrint('\n__init__: end, register no: %s' % self.listen_sock.fileno() )
 
+    #@profile
     def process(self, fd):
         sock_state = self.conn_state[fd]
         response = self.logic(sock_state.buff_read)
@@ -170,6 +171,7 @@ class nbNet(nbNetBase):
         sock_state.printState()
         #self.state_machine(fd)
     
+    #@profile
     def accept2read(self, fd):
         conn = self.accept(fd)
         self.epoll_sock.register(conn.fileno(), select.EPOLLIN)
@@ -178,8 +180,9 @@ class nbNet(nbNetBase):
         self.conn_state[conn.fileno()].state = "read"
         # now end of accept, but the main process still on 'accept' status
         # waiting for new client to connect it.
-        dbgPrint("\n -- accept end!")
+        #dbgPrint("\n -- accept end!")
 
+    #@profile
     def read2process(self, fd):
         """fd is fileno() of socket"""
         #pdb.set_trace()
@@ -187,7 +190,7 @@ class nbNet(nbNetBase):
         try:
             read_ret = self.read(fd)
         except (Exception), msg:
-            dbgPrint(msg)
+            #dbgPrint(msg)
             read_ret = "closing"
         if read_ret == "process":
             # recv complete, change state to process it
@@ -206,6 +209,7 @@ class nbNet(nbNetBase):
         else:
             raise Exception("impossible state returned by self.read")
 
+    #@profile
     def write2read(self, fd):
         try:
             write_ret = self.write(fd)
@@ -221,15 +225,20 @@ class nbNet(nbNetBase):
             self.conn_state[fd].state = "read"
             self.epoll_sock.modify(fd, select.EPOLLIN)
         elif write_ret == "closing":
-            dbgPrint(msg)
+            #dbgPrint(msg)
             self.conn_state[fd].state = 'closing'
             # closing directly when error.
             self.state_machine(fd)
     
-
+counter = 0
 if __name__ == '__main__':
+    
     def logic(d_in):
-        return(d_in[::-1])
+        global counter
+        counter += 1
+        if counter % 100000 == 0:
+            print counter, time.time()
+        return("a")
 
-    reverseD = nbNet('0.0.0.0', 9076, logic)
+    reverseD = nbNet('0.0.0.0', 9099, logic)
     reverseD.run()
