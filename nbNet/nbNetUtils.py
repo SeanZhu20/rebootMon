@@ -6,6 +6,8 @@ import socket
 import select
 import time
 import pdb
+import sys, os
+import fcntl
 
 #DEBUG = True
 DEBUG = False
@@ -20,6 +22,10 @@ def get_linenumber():
 def dbgPrint(msg):
     if DEBUG:
         print get_linenumber(), msg
+
+def nonblocking(fd):
+    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
 import signal,functools
 class TimeoutError(Exception): pass
@@ -128,7 +134,8 @@ class STATE:
         self.buff_read = ""
         # sock_obj is a object
         self.sock_obj = ""
-
+        self.popen_pipe = 0
+    
     def printState(self):
         if DEBUG:
             dbgPrint('\n - current state of fd: %d' % self.sock_obj.fileno())

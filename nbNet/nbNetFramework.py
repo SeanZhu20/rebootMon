@@ -20,7 +20,7 @@ class nbNetBase:
         tmp_state = STATE()
         tmp_state.sock_obj = sock
         self.conn_state[sock.fileno()] = tmp_state
-        self.conn_state[sock.fileno()].printState()
+        #self.conn_state[sock.fileno()].printState()
         #dbgPrint("\n -- setFd end!")
 
     def accept(self, fd): 
@@ -41,10 +41,13 @@ class nbNetBase:
             sock.close()
             self.epoll_sock.unregister(fd)
             self.conn_state.pop(fd)
+            tmp_pipe = self.popen_pipe
+            self.popen_pipe = 0
+            tmp_pipe.close()
         except:
             #dbgPrint("Close fd: %s abnormal" % fd)
             pass
-    
+    #@profile
     def read(self, fd):
         """fd is fileno() of socket"""
         #pdb.set_trace()
@@ -62,7 +65,7 @@ class nbNetBase:
             sock_state.buff_read += one_read
             sock_state.have_read += len(one_read)
             sock_state.need_read -= len(one_read)
-            sock_state.printState()
+            #sock_state.printState()
 
             # read protocol header
             if sock_state.have_read == 10:
@@ -74,7 +77,7 @@ class nbNetBase:
                 # call state machine, current state is read. 
                 # after protocol header haven readed, read the real cmd content, 
                 # call machine instead of call read() it self in common.
-                sock_state.printState()
+                #sock_state.printState()
                 return "readcontent"
             elif sock_state.need_read == 0:
                 # recv complete, change state to process it
@@ -95,30 +98,42 @@ class nbNetBase:
     def write(self, fd):
         sock_state = self.conn_state[fd]
         conn = sock_state.sock_obj
-        last_have_send = sock_state.have_write
-        try:
-            # to send some Bytes, but have_send is the return num of .send()
-            have_send = conn.send(sock_state.buff_write[last_have_send:])
-            sock_state.have_write += have_send
-            sock_state.need_write -= have_send
-            if sock_state.need_write == 0 and sock_state.have_write != 0:
-                # send complete, re init status, and listen re-read
-                sock_state.printState()
-                #dbgPrint('\n write data completed!')
-                return "writecomplete"
-            else:
-                return "writemore"
-        except socket.error, msg:
-            return "closing"
+        #pdb.set_trace()
+        
+        if isinstance(sock_state.popen_pipe, file):
+            try:
+                output = sock_state.popen_pipe.read()
+                #print output
+            except (IOError, ValueError), msg:
+                pass
+            #have_send = conn.send("%010d%s" % (len(output), output))
+            #todo
+
+        else:
+            last_have_send = sock_state.have_write
+            try:
+                # to send some Bytes, but have_send is the return num of .send()
+                have_send = conn.send(sock_state.buff_write[last_have_send:])
+                sock_state.have_write += have_send
+                sock_state.need_write -= have_send
+                if sock_state.need_write == 0 and sock_state.have_write != 0:
+                    # send complete, re init status, and listen re-read
+                    #sock_state.printState()
+                    #dbgPrint('\n write data completed!')
+                    return "writecomplete"
+                else:
+                    return "writemore"
+            except socket.error, msg:
+                return "closing"
 
 
     def run(self):
         while True:
             #dbgPrint("\nrun func loop:")
             # print conn_state
-            for i in self.conn_state.iterkeys():
+            #for i in self.conn_state.iterkeys():
                 #dbgPrint("\n - state of fd: %d" % i)
-                self.conn_state[i].printState()
+                #self.conn_state[i].printState()
 
             epoll_list = self.epoll_sock.poll()
             for fd, events in epoll_list:
@@ -163,14 +178,21 @@ class nbNet(nbNetBase):
     #@profile
     def process(self, fd):
         sock_state = self.conn_state[fd]
-        response = self.logic(sock_state.buff_read)
-        sock_state.buff_write = "%010d%s" % (len(response), response)
-        sock_state.need_write = len(sock_state.buff_write)
+        response = self.logic(fd, sock_state.buff_read)
+        #pdb.set_trace()
+        if isinstance(response, str):
+            sock_state.buff_write = "%010d%s" % (len(response), response)
+            sock_state.need_write = len(sock_state.buff_write)
+            #sock_state.printState()
+            #self.state_machine(fd)
+        elif isinstance(response, file):
+            nonblocking(response)
+            sock_state.popen_pipe = response
         sock_state.state = "write"
         self.epoll_sock.modify(fd, select.EPOLLOUT)
-        sock_state.printState()
-        #self.state_machine(fd)
-    
+
+             
+
     #@profile
     def accept2read(self, fd):
         conn = self.accept(fd)
