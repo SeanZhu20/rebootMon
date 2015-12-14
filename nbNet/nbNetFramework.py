@@ -180,16 +180,15 @@ class nbNet(nbNetBase):
         sock_state = self.conn_state[fd]
         response = self.logic(fd, sock_state.buff_read)
         #pdb.set_trace()
-        if isinstance(response, str):
+        if response == None:
+            pass
+        else:  
             sock_state.buff_write = "%010d%s" % (len(response), response)
             sock_state.need_write = len(sock_state.buff_write)
             #sock_state.printState()
             #self.state_machine(fd)
-        elif isinstance(response, file):
-            nonblocking(response)
-            sock_state.popen_pipe = response
-        sock_state.state = "write"
-        self.epoll_sock.modify(fd, select.EPOLLOUT)
+            sock_state.state = "write"
+            self.epoll_sock.modify(fd, select.EPOLLOUT)
 
              
 
