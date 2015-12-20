@@ -35,11 +35,13 @@ class nbNetBase:
     
     def close(self, fd):
         """fd is fileno() of socket"""
+        #pdb.set_trace()
+        print "closing", fd, self.conn_state
         try:
             # cancel of listen to event
             sock = self.conn_state[fd].sock_obj
-            sock.close()
             self.epoll_sock.unregister(fd)
+            sock.close()
             self.conn_state.pop(fd)
             tmp_pipe = self.popen_pipe
             self.popen_pipe = 0
@@ -138,6 +140,8 @@ class nbNetBase:
             epoll_list = self.epoll_sock.poll()
             for fd, events in epoll_list:
                 #dbgPrint('\n-- run epoll return fd: %d. event: %s' % (fd, events))
+                print self.conn_state
+                print fd, events
                 sock_state = self.conn_state[fd]
                 if select.EPOLLHUP & events:
                     #dbgPrint("EPOLLHUP")
@@ -181,7 +185,10 @@ class nbNet(nbNetBase):
         response = self.logic(fd, sock_state.buff_read)
         #pdb.set_trace()
         if response == None:
-            pass
+            conn = sock_state.sock_obj
+            self.setFd(conn)
+            self.conn_state[fd].state = "read"
+            self.epoll_sock.modify(fd, select.EPOLLIN)
         else:  
             sock_state.buff_write = "%010d%s" % (len(response), response)
             sock_state.need_write = len(sock_state.buff_write)
