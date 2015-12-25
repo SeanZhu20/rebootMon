@@ -1,6 +1,7 @@
 # nbNet
-reboot-arch第四期课上
+Reboot架构师班课上内容
 简洁而不简单的监控系统
+课表参见：http://www.51reboot.com/course/arch/
 
 ## 介绍部署
 
