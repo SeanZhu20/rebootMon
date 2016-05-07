@@ -92,7 +92,7 @@ class Loop:
                     m = {
                         "action":"alarm",
                         "name":name,
-                        "host":msg["Host"]
+                        "host":msg["Host"],
                         "expr":expr,
                         "value":msg[name],
                         "mail":mail,
