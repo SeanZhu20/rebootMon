@@ -76,7 +76,7 @@ class Loop:
     def getconf(self):
         reload(conf)
         return conf.ffconf
-        
+
     def judge(self, msg):
         for conf in self.getconf():
             name, op, value, mail = conf
@@ -84,33 +84,37 @@ class Loop:
             logging.debug("expr:%s", expr)
             res = eval(expr)
             logging.debug("res:%s", res)
+
+            key = msg["Host"] + "_" + name
             if res:
-                count = self.alarmMap.get(name, 0)
+                count = self.alarmMap.get(key, 0)
                 if count < 3:
                     m = {
                         "action":"alarm",
                         "name":name,
+                        "host":msg["Host"]
                         "expr":expr,
                         "value":msg[name],
                         "mail":mail,
                     }
                     self.q.put(m)
                     count += 1
-                    self.alarmMap[name] = count
+                    self.alarmMap[key] = count
 
             else:
-                count = self.alarmMap.get(name, 0)
+                count = self.alarmMap.get(key, 0)
                 if count > 1:
                     m = {
                         "action":"recovery",
                         "name":name,
+                        "host":msg["Host"],
                         "expr":expr,
                         "value":msg[name],
                         "mail":mail,
                     }
 
                     self.q.put(m)
-                    self.alarmMap[name] = 0
+                    self.alarmMap[key] = 0
 
 
 class Alarm():
@@ -122,8 +126,10 @@ class Alarm():
         while True:
             item = self.q.get()
             logging.debug("alarm:%s", item)
-            body = 'action:%s name:%s alarm:%s, current:%s'%(item['action'], item['name'], item['expr'], item['value'])
-            os.system('echo "%s" | mail -s "%s" "%s"'%(body, item['expr'], item['mail']))
+            title = '%s-%s'%(item["host"], item["name"])
+            body = 'action:%s host:%s name:%s alarm:%s, current:%s'%(
+                item['action'], item['host'], item['name'], item['expr'], item['value'])
+            os.system('echo "%s" | mail -s "%s" "%s"'%(body, title, item['mail']))
 
 def main():
     if len(sys.argv) < 2:
