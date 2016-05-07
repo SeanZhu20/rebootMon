@@ -104,7 +104,7 @@ def main():
     FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
-    sendList = [('127.0.0.1', 9000)]
+    sendList = [('127.0.0.1', 9002), ('127.0.0.1', 9003)]
     trans = Transfer(('0.0.0.0', int(sys.argv[1])), sendList)
     trans.start()
 
