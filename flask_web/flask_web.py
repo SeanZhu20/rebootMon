@@ -14,7 +14,7 @@ from dbutil.dbutil import DB
 
 
 db = DB(host="localhost", mysql_user="reboot", mysql_pass="reboot123", \
-                mysql_db="falcon")
+                mysql_db="arch6_falcon")
 
 app = Flask(__name__)
 
